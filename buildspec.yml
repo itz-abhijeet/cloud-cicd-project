@@ -20,7 +20,7 @@ phases:
   pre_build:
     commands:
       - echo "=== Running pre-build checks at $(date) ==="
-      - python -m py_compile app.py      # Syntax check
+      - python -m py_compile application.py      # Syntax check
       - echo "Syntax check passed"
 
   # ── Build Phase ───────────────────────────────────────────────────────────────
@@ -39,7 +39,7 @@ phases:
 # All files required by Elastic Beanstalk are bundled into the output ZIP.
 artifacts:
   files:
-    - app.py
+    - application.py
     - requirements.txt
     - Procfile
     - templates/**/*
