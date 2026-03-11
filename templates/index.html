@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="CIDI DevOps Pipeline — Flask application deployed on AWS Elastic Beanstalk via GitHub and AWS CodeBuild." />
+  <title>{{ app_name }} — Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-1: #0a0f1e;
+      --bg-2: #0d1528;
+      --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.08);
+      --accent:  #4f8ef7;
+      --accent-2: #7c5df9;
+      --green:  #22d3a5;
+      --yellow: #f59e0b;
+      --red:    #f87171;
+      --text-primary:   #f0f4ff;
+      --text-secondary: #8b9ab8;
+      --radius: 16px;
+      --transition: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-1);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated gradient background ────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% -10%, rgba(79,142,247,.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 110%, rgba(124,93,249,.15) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Floating grid dots ───────────────────────────────────── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout wrapper ───────────────────────────────────────── */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── Nav ──────────────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(10,15,30,.7);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: .02em;
+    }
+
+    .nav-brand .icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+    }
+
+    .nav-links { display: flex; gap: 6px; }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: .875rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 8px;
+      transition: background var(--transition), color var(--transition);
+    }
+    .nav-links a:hover { background: var(--surface-hover); color: var(--text-primary); }
+
+    /* ── Hero ─────────────────────────────────────────────────── */
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px;
+    }
+
+    .env-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--green);
+      background: rgba(34,211,165,.12);
+      border: 1px solid rgba(34,211,165,.25);
+      padding: 4px 14px;
+      border-radius: 100px;
+      margin-bottom: 28px;
+    }
+
+    .pulse-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: pulse 2s ease-in-out infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .5; transform: scale(.75); }
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 800;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #f0f4ff 30%, #8b9ab8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+    }
+
+    .hero-sub {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 540px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    .cta-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: .9rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all var(--transition);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      box-shadow: 0 0 24px rgba(79,142,247,.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 32px rgba(79,142,247,.45); }
+
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--surface-hover); transform: translateY(-2px); }
+
+    /* ── Section headings ─────────────────────────────────────── */
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .section-desc {
+      color: var(--text-secondary);
+      font-size: .93rem;
+      margin-bottom: 32px;
+    }
+
+    /* ── Cards ────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: background var(--transition), transform var(--transition), border-color var(--transition);
+      backdrop-filter: blur(8px);
+    }
+    .card:hover {
+      background: var(--surface-hover);
+      transform: translateY(-4px);
+      border-color: rgba(255,255,255,0.14);
+    }
+
+    /* ── Pipeline cards grid ──────────────────────────────────── */
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 56px;
+    }
+
+    .pipeline-card { text-align: center; }
+
+    .pipeline-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      margin: 0 auto 16px;
+    }
+
+    .pipeline-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+    .pipeline-card p  { font-size: .84rem; color: var(--text-secondary); line-height: 1.55; }
+
+    /* ── Status panel ─────────────────────────────────────────── */
+    .status-panel {
+      margin-bottom: 56px;
+    }
+
+    .status-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+    }
+
+    .status-table th {
+      text-align: left;
+      padding: 10px 16px;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .status-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .status-table tr:last-child td { border-bottom: none; }
+    .status-table tr:hover td { background: var(--surface-hover); }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 12px;
+      border-radius: 100px;
+      font-size: .78rem;
+      font-weight: 600;
+    }
+
+    .chip-green  { background: rgba(34,211,165,.1);  color: var(--green);  border: 1px solid rgba(34,211,165,.25);  }
+    .chip-yellow { background: rgba(245,158,11,.1);  color: var(--yellow); border: 1px solid rgba(245,158,11,.25);  }
+    .chip-blue   { background: rgba(79,142,247,.1);  color: var(--accent); border: 1px solid rgba(79,142,247,.25);  }
+
+    .mono { font-family: 'JetBrains Mono', monospace; font-size: .82rem; color: var(--text-secondary); }
+
+    /* ── API endpoints ────────────────────────────────────────── */
+    .endpoint-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 56px; }
+
+    .endpoint-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+    }
+
+    .method-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .75rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 6px;
+      min-width: 52px;
+      text-align: center;
+      background: rgba(79,142,247,.15);
+      color: var(--accent);
+      border: 1px solid rgba(79,142,247,.25);
+      letter-spacing: .05em;
+      flex-shrink: 0;
+    }
+
+    .endpoint-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .9rem;
+      font-weight: 600;
+      flex-shrink: 0;
+      min-width: 100px;
+    }
+
+    .endpoint-desc { color: var(--text-secondary); font-size: .88rem; }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 28px 24px;
+      text-align: center;
+      font-size: .82rem;
+      color: var(--text-secondary);
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Divider ──────────────────────────────────────────────── */
+    .section-gap { margin-bottom: 56px; }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .endpoint-row { flex-wrap: wrap; gap: 8px; }
+      .nav-links a { padding: 6px 10px; font-size: .8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navigation ─────────────────────────────────────────────── -->
+  <div class="wrapper">
+    <nav id="main-nav" aria-label="Main navigation">
+      <div class="nav-brand">
+        <span class="icon" aria-hidden="true">⚡</span>
+        {{ app_name }}
+      </div>
+      <div class="nav-links">
+        <a href="/"       id="nav-home"   aria-current="page">Home</a>
+        <a href="/status" id="nav-status">Status</a>
+        <a href="/health" id="nav-health">Health</a>
+      </div>
+    </nav>
+
+    <!-- ── Hero ───────────────────────────────────────────────────── -->
+    <section class="hero" id="hero" aria-labelledby="page-heading">
+      <div class="env-badge">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        {{ environment }} &nbsp;·&nbsp; v{{ version }}
+      </div>
+
+      <h1 id="page-heading">CI/CD Pipeline<br/>on AWS</h1>
+
+      <p class="hero-sub">
+        A production-ready Flask application deployed through a fully automated
+        pipeline — <strong>GitHub → CodeBuild → Elastic Beanstalk</strong>.
+      </p>
+
+      <div class="cta-group">
+        <a href="/status" class="btn btn-primary" id="btn-check-status">
+          ⚡ Check Status
+        </a>
+        <a href="/health" class="btn btn-ghost" id="btn-health-probe">
+          🩺 Health Probe
+        </a>
+      </div>
+    </section>
+
+    <!-- ── Pipeline steps ─────────────────────────────────────────── -->
+    <section class="section-gap" id="pipeline" aria-labelledby="pipeline-heading">
+      <p class="section-label">Architecture</p>
+      <h2 class="section-title" id="pipeline-heading">Deployment Pipeline</h2>
+      <p class="section-desc">End-to-end automated from commit to production.</p>
+
+      <div class="pipeline-grid">
+        <article class="card pipeline-card" id="pipeline-github">
+          <div class="pipeline-icon" style="background:rgba(79,142,247,.12);">🐙</div>
+          <h3>GitHub</h3>
+          <p>Source repository. A push to <code>main</code> triggers the pipeline automatically.</p>
+        </article>
+
+        <article class="card pipeline-card" id="pipeline-codepipeline">
+          <div class="pipeline-icon" style="background:rgba(245,158,11,.12);">🔗</div>
+          <h3>CodePipeline</h3>
+          <p>Orchestrates the stages — source, build, and deploy — end-to-end.</p>
+        </article>
+
+        <article class="card pipeline-card" id="pipeline-codebuild">
+          <div class="pipeline-icon" style="background:rgba(124,93,249,.12);">🔨</div>
+          <h3>CodeBuild</h3>
+          <p>Installs dependencies, runs syntax checks, and packages the artifact.</p>
+        </article>
+
+        <article class="card pipeline-card" id="pipeline-eb">
+          <div class="pipeline-icon" style="background:rgba(34,211,165,.12);">🌱</div>
+          <h3>Elastic Beanstalk</h3>
+          <p>Deploys the packaged artifact and runs the app via Gunicorn in production.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ── Service status table ───────────────────────────────────── -->
+    <section class="status-panel" id="services" aria-labelledby="services-heading">
+      <p class="section-label">Monitoring</p>
+      <h2 class="section-title" id="services-heading">Service Status</h2>
+      <p class="section-desc">Live snapshot of pipeline components.</p>
+
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <table class="status-table" id="status-table" aria-label="Service status table">
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Status</th>
+              <th>Environment</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr id="row-flask">
+              <td><strong>Flask App</strong></td>
+              <td><span class="status-chip chip-green">● Running</span></td>
+              <td><span class="mono">{{ environment }}</span></td>
+              <td class="mono">v{{ version }}</td>
+            </tr>
+            <tr id="row-gunicorn">
+              <td><strong>Gunicorn WSGI</strong></td>
+              <td><span class="status-chip chip-green">● Active</span></td>
+              <td><span class="mono">{{ environment }}</span></td>
+              <td class="mono">workers=3</td>
+            </tr>
+            <tr id="row-codebuild">
+              <td><strong>AWS CodeBuild</strong></td>
+              <td><span class="status-chip chip-green">● Succeeded</span></td>
+              <td><span class="mono">us-east-1</span></td>
+              <td class="mono">buildspec.yml</td>
+            </tr>
+            <tr id="row-eb">
+              <td><strong>Elastic Beanstalk</strong></td>
+              <td><span class="status-chip chip-green">● Healthy</span></td>
+              <td><span class="mono">{{ environment }}</span></td>
+              <td class="mono">Python 3.11</td>
+            </tr>
+            <tr id="row-pipeline">
+              <td><strong>CodePipeline</strong></td>
+              <td><span class="status-chip chip-blue">● Watching</span></td>
+              <td><span class="mono">main</span></td>
+              <td class="mono">on-push trigger</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── API endpoints ──────────────────────────────────────────── -->
+    <section id="api" aria-labelledby="api-heading">
+      <p class="section-label">Endpoints</p>
+      <h2 class="section-title" id="api-heading">API Reference</h2>
+      <p class="section-desc">All available HTTP routes exposed by this application.</p>
+
+      <div class="endpoint-list">
+        <div class="card endpoint-row" id="endpoint-home">
+          <span class="method-badge">GET</span>
+          <span class="endpoint-path">/</span>
+          <span class="endpoint-desc">Renders this dashboard page.</span>
+        </div>
+
+        <div class="card endpoint-row" id="endpoint-status">
+          <span class="method-badge">GET</span>
+          <span class="endpoint-path">/status</span>
+          <span class="endpoint-desc">Returns a JSON health payload with version, environment, and timestamp.</span>
+        </div>
+
+        <div class="card endpoint-row" id="endpoint-health">
+          <span class="method-badge">GET</span>
+          <span class="endpoint-path">/health</span>
+          <span class="endpoint-desc">Lightweight liveness probe used by the ALB and Elastic Beanstalk.</span>
+        </div>
+      </div>
+    </section>
+  </div><!-- /.wrapper -->
+
+  <!-- ── Footer ─────────────────────────────────────────────────── -->
+  <footer id="main-footer">
+    &copy; {{ year }} {{ app_name }} &nbsp;·&nbsp;
+    Built with <a href="https://flask.palletsprojects.com/" target="_blank" rel="noopener">Flask</a>
+    &amp; deployed on
+    <a href="https://aws.amazon.com/elasticbeanstalk/" target="_blank" rel="noopener">AWS Elastic Beanstalk</a>.
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+# ── Core Framework ─────────────────────────────────────────────────────────────
+Flask==3.1.0
+
+# ── WSGI Server (required for production / Elastic Beanstalk) ──────────────────
+gunicorn==23.0.0
+
+# ── Utilities ──────────────────────────────────────────────────────────────────
+python-dotenv==1.0.1   # load .env files in local development

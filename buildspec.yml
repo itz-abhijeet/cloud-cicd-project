@@ -1,0 +1,53 @@
+version: 0.2
+
+# ── Environment ────────────────────────────────────────────────────────────────
+env:
+  variables:
+    PYTHON_VERSION: "3.11"
+    APP_ENV: "production"
+
+phases:
+  # ── Install Phase ─────────────────────────────────────────────────────────────
+  install:
+    runtime-versions:
+      python: "3.11"
+    commands:
+      - echo "=== Installing system dependencies ==="
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
+
+  # ── Pre-Build Phase ───────────────────────────────────────────────────────────
+  pre_build:
+    commands:
+      - echo "=== Running pre-build checks at $(date) ==="
+      - python -m py_compile app.py      # Syntax check
+      - echo "Syntax check passed"
+
+  # ── Build Phase ───────────────────────────────────────────────────────────────
+  build:
+    commands:
+      - echo "=== Build started at $(date) ==="
+      - echo "Packaging application for Elastic Beanstalk deployment"
+
+  # ── Post-Build Phase ──────────────────────────────────────────────────────────
+  post_build:
+    commands:
+      - echo "=== Build completed at $(date) ==="
+      - echo "Artifact ready for Elastic Beanstalk"
+
+# ── Artifacts ─────────────────────────────────────────────────────────────────
+# All files required by Elastic Beanstalk are bundled into the output ZIP.
+artifacts:
+  files:
+    - app.py
+    - requirements.txt
+    - Procfile
+    - templates/**/*
+    - .ebextensions/**/*
+  discard-paths: no
+
+# ── Cache ─────────────────────────────────────────────────────────────────────
+# Cache pip packages between builds to speed up the pipeline.
+cache:
+  paths:
+    - "/root/.cache/pip/**/*"
